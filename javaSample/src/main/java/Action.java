@@ -58,6 +58,7 @@ public class Action {
         channelState = Const.CHANNEL_STATE_ACCEPT;
     }
 
+    //他处理没有通道时的消息：先把消息放在队列里，在建立通道后再发送
     public void onSucc(Message message) {
         channelType = message.channelType;
         channelState = Const.CHANNEL_STATE_SUCCESS;

@@ -24,7 +24,7 @@ public class Scheduler {
         this.channel = channel;
         //节点个数
         int N = Main.config.mainConfig.nodeCount;
-        //它认为每个节点间只有一条channel
+        //它认为每个节点间只有一条channel，action[i]就是和target i之间的连接，如果action的channelState为CHANNEL_STATE_NONE那么就没有直接连接
         action = new Action[N+1];
         for (int i=1; i<=N; i++) {
             action[i] = new Action(i, this);
