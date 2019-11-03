@@ -8,76 +8,72 @@ import java.util.stream.Collectors;
 public class Action {
     private int target;
     private double timeout;
-    private int channelState, waitingCount;
+    private int waitingCount;
     private List<Message> queue;
     private Scheduler scheduler;
-    private int channelType;
-    private int channelId;
+    private Topo topo;
 
-    public Action(int target, Scheduler scheduler) {
+    public Action(int target, Scheduler scheduler,Topo topo) {
         this.target = target;
         this.scheduler = scheduler;
+        this.topo=topo;
         timeout = 0;
         waitingCount = 0;
         queue = new ArrayList<>();
-        clearChannelInfo();
+
     }
 
-    private void clearChannelInfo() {
-        channelType = Const.CHANNEL_TYPE_ERROR;
-        channelState = Const.CHANNEL_STATE_NONE;
-        channelId = 0;
-    }
 
-    public boolean isValid() {
-        return channelType != Const.CHANNEL_TYPE_ERROR && channelState == Const.CHANNEL_STATE_SUCCESS;
-    }
 
-    public int getOtherType() {
-        return channelType == Const.CHANNEL_TYPE_NORMAL ? Const.CHANNEL_TYPE_FAST : Const.CHANNEL_TYPE_NORMAL;
-    }
 
     public void doRequest(int channelType) {
-        if (this.channelType != Const.CHANNEL_TYPE_ERROR) return ;
-        this.channelType = channelType;
-        channelState = Const.CHANNEL_STATE_REQUEST;
+//        if (this.channelType != Const.CHANNEL_TYPE_ERROR) return ;
+//        this.channelType = channelType;
+//        channelState = Const.CHANNEL_STATE_REQUEST;
         scheduler.sendChannelBuild(target, Const.STATE_REQUEST, Const.ERR_CODE_NONE, channelType);
     }
 
     public void onRequest(Message message) {
         int target = message.sysMessage.target;
-        if (channelState != Const.CHANNEL_STATE_NONE) {
-            if (scheduler.getId() < target) {
-                scheduler.sendChannelBuild(target, Const.STATE_REFUSE,
-                        Const.ERR_CODE_CHANNEL_BUILD_TARGET_REFUSE, message.channelType);
-                return ;
-            }
-        }
+        //判断是否拒绝请求 一般不拒绝
+        //if ()
         scheduler.sendChannelBuild(target, Const.STATE_ACCEPT, Const.ERR_CODE_NONE, message.channelType);
-        channelType = message.channelType;
-        channelState = Const.CHANNEL_STATE_ACCEPT;
+//        channelType = message.channelType;
+//        channelState = Const.CHANNEL_STATE_ACCEPT;
     }
 
-    //他处理没有通道时的消息：先把消息放在队列里，在建立通道后再发送
+    //收到了通道建立成功的消息
     public void onSucc(Message message) {
-        channelType = message.channelType;
-        channelState = Const.CHANNEL_STATE_SUCCESS;
-        channelId = message.channelId;
+
+        dealWithQueueMessage(message);
+    }
+
+    private void tell
+
+    private void dealWithQueueMessage(Message message){
         filterQueue();
-        queue.forEach(msg -> doSend(msg));
-        queue.clear();
+        queue.forEach(msg -> dealWithQueueMessage0(msg));
+
+    }
+
+    private void dealWithQueueMessage0(Message message){
+        if (topo.hasDirectNormalChannel(target)){
+            doSendToTagertDirectly(message);
+            queue.remove(message);
+        }
     }
 
     public void onRefuse(Message message) {
-        if (channelState != Const.CHANNEL_STATE_SUCCESS) {
-            System.out.println("on refuse");
-            int next = getOtherType();
-            clearChannelInfo();
-            filterQueue();
-            if (waitingCount > 0 || queue.size() > 0) {
-                doRequest(next);
-            }
-        }
+//        if (channelState != Const.CHANNEL_STATE_SUCCESS) {
+//            System.out.println("on refuse");
+//            int next = getOtherType();
+//            clearChannelInfo();
+//            filterQueue();
+//            if (waitingCount > 0 || queue.size() > 0) {
+//                doRequest(next);
+//            }
+//        }
+        //建立被拒绝怎么办
     }
 
     public void onDestroy(Message message) {
@@ -94,12 +90,24 @@ public class Action {
     public void onPrepare(Message message) {
         //老大让我准备发消息
         //我设置好几点到期
-        timeout = Math.max(timeout, Main.curTime() + Main.config.mainConfig.timeOut);
-        waitingCount++;
-        //如果这条channel没法
-        if (channelState == Const.CHANNEL_STATE_NONE) {
-            doRequest(getOtherType());
+//        timeout = Math.max(timeout, Main.curTime() + Main.config.mainConfig.timeOut);
+//        waitingCount++;
+//        //如果这条channel没法
+//        if (channelState == Const.CHANNEL_STATE_NONE) {
+//            doRequest(getOtherType());
+//        }
+
+        if (topo.canReachBySuperNode(target)){
+
+        }else {
+            //方法1：建立直接慢速通道
+            //方法2：建立直接快速通道
+            //方法3：等superNode建立好
+            //我们使用方法1
+            doRequest(Const.CHANNEL_TYPE_NORMAL);
         }
+        waitingCount++;
+
     }
 
     public void onSend(Message message) {
@@ -107,21 +115,40 @@ public class Action {
             System.out.println("succ received message: " + message.sysMessage.data);
             return ;
         }
+
         waitingCount--;
-        if (channelState == Const.CHANNEL_STATE_SUCCESS) {
+        if (topo.canReachBySuperNode(target)) {
             System.out.println("send directory");
-            doSend(message);
-        } else {
+            doSendBySuperNode(message);
+            return;
+        }else if (topo.hasDirectNormalChannel(target)){
+            doSendToTagertDirectly(message);
+            return;
+        }
+        else {
             System.out.println("add into cache");
-            System.out.printf("channelState:%d\n", channelState);
             queue.add(message);
         }
     }
 
-    public void doSend(Message message) {
-        if (message.recvTime + Main.config.mainConfig.timeOut >= Main.curTime() + getConfig().lag) {
-            message.channelId = channelId;
-            scheduler.doSend(message, message.sysMessage.target);
+    public void doSendToTagertDirectly(Message message){
+        scheduler.doSend(message, target);
+    }
+
+    public void doSendBySuperNode(Message message) {
+//        if (message.recvTime + Main.config.mainConfig.timeOut >= Main.curTime() + getConfig().lag) {
+//
+//        }
+        if (!topo.isSuperNode()){
+            scheduler.doSend(message, topo.getHisSuperNodeId());
+        } else {
+            int hisSuperNodeId=topo.nodeId2SuperNodeId(target);
+            //如果目标的superNodeId就是自己，直接把消息发给它
+            if (hisSuperNodeId==scheduler.getId()){
+                doSendToTagertDirectly(message);
+            }else{
+                scheduler.doSend(message,hisSuperNodeId);
+            }
         }
     }
 

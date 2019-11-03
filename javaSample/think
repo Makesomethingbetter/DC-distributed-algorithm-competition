@@ -1,0 +1,6 @@
+从server发给node的几种消息：
+1prepare
+2send
+3sys
+4build
+5destroy
