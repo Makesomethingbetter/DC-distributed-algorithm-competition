@@ -59,13 +59,6 @@ public class Scheduler {
             case Const.CALL_TYPE_CHANNEL_BUILD:
                 //如果message.channelId!=则说明建立通道成功了
                 if (message.channelId != 0) {
-                    /*
-                    * 如果是superNode:
-                    * 1若建立的是和自己组的nomalNode：告诉自己组的nomalNode，告诉相连的superNode
-                    * 2若建立的是不是自己组的nomalNode（发生在初始的时候）：不告诉所有人，处理消息队列
-                    * 3若建立的是和superNode：告诉它自己组连上的nomalNode
-                    *
-                    * */
                     action[message.sysMessage.target].onSucc(message);
                 } else {
                     switch (message.state) {

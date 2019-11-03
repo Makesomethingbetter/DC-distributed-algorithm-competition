@@ -9,11 +9,12 @@ public class Topo {
     private int nodeCount;
     private int finalSuperNodeId;
     private int groupSize;
-    private int hisSuperNodeId; //superNode的此值无效，设为-1
+    private int hisSuperNodeId; //superNode的此值无效，设为自己的nodeId
     private boolean isSuperNode;
 
     private boolean  isConnectedWithSuperNode; //superNode的此值无效
     private boolean[] canReachBySuperNode ;
+    //<nodeId,channelId>
     private HashMap<Integer,Integer> normalChannelTemporary;
 
     private int[] nodeId2SuperNodeId;//normalNode的此值无效
@@ -32,7 +33,11 @@ public class Topo {
         finalSuperNodeId=7;
         groupSize=6;
         isSuperNode=false;
-        hisSuperNodeId=1;
+        if (isSuperNode){
+            hisSuperNodeId=nodeId;
+        }else{
+            hisSuperNodeId=1;
+        }
 
         isConnectedWithSuperNode=false;
         canReachBySuperNode=new boolean[nodeCount];
@@ -65,6 +70,10 @@ public class Topo {
 
     }
 
+    public void setConnectedWithSuperNode(boolean connectedWithSuperNode) {
+        isConnectedWithSuperNode = connectedWithSuperNode;
+    }
+
     public boolean isSuperNode(){
         return isSuperNode;
     }
@@ -77,15 +86,27 @@ public class Topo {
         return nodeId2SuperNodeId[id-1];
     }
 
+    public void setNodeId2SuperNodeId(int id){
+        nodeId2SuperNodeId[id-1]=nodeId;
+    }
+
     public int getHisSuperNodeId(){
         return hisSuperNodeId;
     }
 
-    public boolean hasDirectNormalChannel(int id){
+    public boolean hasDirectNormalChannelTemporary(int id){
         boolean reachable=false;
             if (normalChannelTemporary.containsKey(id)){
                 reachable=true;
             }
         return reachable;
+    }
+
+    public void setDirectNormalChannelExits(int id,int channelId){
+        normalChannelTemporary.put(id,channelId);
+    }
+
+    public boolean isGroupMember(int id){
+        return id>=finalSuperNodeId+nodeId*groupSize&&id<=finalSuperNodeId+(nodeId+1)*groupSize?true:false;
     }
 }

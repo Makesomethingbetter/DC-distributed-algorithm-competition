@@ -42,27 +42,94 @@ public class Action {
 //        channelState = Const.CHANNEL_STATE_ACCEPT;
     }
 
-    //收到了通道建立成功的消息
+    /**
+     * 通道建立成功
+     * 1 临时的低速通道建立成功：
+     * 1.1如果是直接连接的低速通道
+     * 如果此时高速通道可达，（高速通道是否可达是在onSys中解决的）
+     * 直接通过低速通道发送信息，如果在建立低速通道时可以通过superNode到达了，队列中就没有这个消息了
+     * 1.2如果是和superNode的高速通道，不发送
+     * 2 如果高速通道
+     *
+     * */
     public void onSucc(Message message) {
-
-        dealWithQueueMessage(message);
+        //如果是低速通道
+        if (message.channelType==Const.CHANNEL_TYPE_NORMAL){
+            //如果我是superNode
+            if (topo.isSuperNode()){
+                //如果建立成功的低速通道是和我负责的nomalNode
+                if (topo.isGroupMember(target)){
+                    topo.setNodeId2SuperNodeId(target);//更改我的路由表
+                    //告诉它我的路由表 未写
+                    dealWithQueueMessageInGroupChannel(message);//处理应该发给它的信息
+                }else {
+                    topo.setDirectNormalChannelExits(target,message.channelId);
+                    dealWithQueueMessageInChannelTemporary(message);
+                }
+            }else{
+                //如果连接的不是自己的superNode
+                if (topo.getHisSuperNodeId()!=target){
+                    topo.setDirectNormalChannelExits(target,message.channelId);
+                    dealWithQueueMessageInChannelTemporary(message);
+                }
+                //如果连接的是自己的superNode
+                else{
+                    topo.setConnectedWithSuperNode(true);
+                    dealWithQueueMessageToMySuperNode(message);
+                }
+            }
+        }
+        //如果是高速通道建立成功 说明这是superNode之间的通道
+        //
+        else{
+            //处理应该发给它的消息
+            //告诉它我的路由表
+        }
     }
 
-    private void tell
-
-    private void dealWithQueueMessage(Message message){
+    private void dealWithQueueMessageToMySuperNode(Message message){
         filterQueue();
-        queue.forEach(msg -> dealWithQueueMessage0(msg));
-
+        queue.forEach(msg -> dealWithQueueMessageToMySuperNode0(msg));
     }
 
-    private void dealWithQueueMessage0(Message message){
-        if (topo.hasDirectNormalChannel(target)){
+    private void dealWithQueueMessageToMySuperNode0(Message message){
+        if (target==topo.getHisSuperNodeId()){
             doSendToTagertDirectly(message);
             queue.remove(message);
         }
     }
 
+    private void dealWithQueueMessageInGroupChannel(Message message){
+        filterQueue();
+        queue.forEach(msg -> dealWithQueueMessageInGroupChannel0(msg));
+    }
+
+    private void dealWithQueueMessageInGroupChannel0(Message message){
+        if (topo.nodeId2SuperNodeId(target)==scheduler.getId()){
+            doSendToTagertDirectly(message);
+            queue.remove(message);
+        }
+    }
+
+    private void dealWithQueueMessageInChannelTemporary(Message message){
+        filterQueue();
+        queue.forEach(msg -> dealWithQueueMessageInChannelTemporary0(msg));
+
+    }
+
+    private void dealWithQueueMessageInChannelTemporary0(Message message){
+        if (topo.hasDirectNormalChannelTemporary(target)){
+            doSendToTagertDirectly(message);
+            queue.remove(message);
+        }
+    }
+
+    /**
+     *
+     *
+     *
+     *
+     * */
     public void onRefuse(Message message) {
 //        if (channelState != Const.CHANNEL_STATE_SUCCESS) {
 //            System.out.println("on refuse");
@@ -87,6 +154,12 @@ public class Action {
         }
     }
 
+    /**
+     *
+     * onPrepare
+     *
+     *
+     * */
     public void onPrepare(Message message) {
         //老大让我准备发消息
         //我设置好几点到期
@@ -109,6 +182,11 @@ public class Action {
         waitingCount++;
 
     }
+    /**
+     *
+     * onSend
+     *
+     * */
 
     public void onSend(Message message) {
         if (scheduler.getId() == message.sysMessage.target) {
@@ -121,7 +199,7 @@ public class Action {
             System.out.println("send directory");
             doSendBySuperNode(message);
             return;
-        }else if (topo.hasDirectNormalChannel(target)){
+        }else if (topo.hasDirectNormalChannelTemporary(target)){
             doSendToTagertDirectly(message);
             return;
         }
@@ -152,6 +230,11 @@ public class Action {
         }
     }
 
+    /**
+     *
+     * 其他功能函数
+     *
+     * */
     //如果发送时间不够就不要这个消息了
     public void filterQueue() {
         ArrayList<Message> filtered = new ArrayList<>();
