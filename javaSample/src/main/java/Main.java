@@ -31,9 +31,7 @@ public class Main {
         Scheduler scheduler = new Scheduler(channel);
         while (true) {
             try {
-                //从server读message
                 List<Message> message = channel.recv();
-                //scheduler处理从server读来的message
                 for (Message msg : message) {
                     scheduler.onRecv(msg);
                 }
