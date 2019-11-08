@@ -11,12 +11,15 @@ import java.util.List;
 public class Main {
 
     public static Config config;
+    public static Topo topo;
+    public static double beginTime;
 
     public static double curTime() {
         return new Date().getTime() / 1000.0;
     }
 
     public static void main(String[] args) throws Exception {
+        beginTime=new Date().getTime();
         //读JSON配置
         ObjectMapper objectMapper = new ObjectMapper();
         config = objectMapper.readValue(new File("resources/client.json"), Config.class);
@@ -29,12 +32,19 @@ public class Main {
 
     public static void mainloop(Channel channel){
         Scheduler scheduler = new Scheduler(channel);
+        topo=new Topo(scheduler);
         while (true) {
             try {
                 List<Message> message = channel.recv();
                 for (Message msg : message) {
                     scheduler.onRecv(msg);
                 }
+
+                    if (topo.canLinkAnyMore()){
+                        if (topo.isAfterInitial()){
+                        topo.linkToLongest();
+                        }
+                    }
                 Thread.sleep(20);
             } catch (InterruptedException e) {
                 break;

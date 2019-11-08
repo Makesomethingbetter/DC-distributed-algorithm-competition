@@ -7,7 +7,6 @@ import java.util.Map;
 public class Scheduler {
     private Channel channel;
     Action[] action;
-    Map<Integer, Integer> channelMap;
     /**
      * 一开始每个节点都知道有多少个点 能有多少条高速、普通通道、通道的时间、通道的message数
      * 通过这些每个节点用相同的算法算出哪些做super node，得到相同的topo.java 并开始建立通道
@@ -29,8 +28,6 @@ public class Scheduler {
         for (int i=1; i<=N; i++) {
             action[i] = new Action(i, this);
         }
-        //<channelID,tagertID>
-        channelMap = new HashMap<>();
     }
 
     public int getId() {
@@ -38,9 +35,10 @@ public class Scheduler {
     }
 
     public void onRecv(Message message) {
-         if (message.errCode != Const.ERR_CODE_NONE) {
-             return ;
-         }
+        //下面注释掉的是他sample的代码，如果不注解掉 onRefuse就无法调用了
+//         if (message.errCode != Const.ERR_CODE_NONE) {
+//             return ;
+//         }
 
         switch (message.callType) {
             case Const.CALL_TYPE_PREPARE:
@@ -50,11 +48,11 @@ public class Scheduler {
                 action[message.sysMessage.target].onSend(message);
                 break;
             case Const.CALL_TYPE_SYS:
+                action[message.sysMessage.target].onSYS(message);
                 break;
             case Const.CALL_TYPE_CHANNEL_BUILD:
                 if (message.channelId != 0) {
                     action[message.sysMessage.target].onSucc(message);
-                    channelMap.put(message.channelId, message.sysMessage.target);
                 } else {
                     switch (message.state) {
                         case Const.STATE_NOTICE:
@@ -67,16 +65,20 @@ public class Scheduler {
                 }
                 break;
             case Const.CALL_TYPE_CHANNEL_DESTROY:
-                int target = channelMap.getOrDefault(message.channelId, 0);
-                if (target!=0) {
-                    action[target].onDestroy(message);
-                    channelMap.remove(message.channelId);
-                }
                 break;
         }
     }
 
-    //向server发message
+    /**
+     *
+     *
+     *
+     * */
+    public void sendSys(int target, int state, int errCode, String data){
+       Message message=Const.GetEmptyMessage();
+       doSend(message,target);
+    }
+
     public void sendChannelBuild(int target, int state, int errCode, int channelType) {
         Message message = Const.GetEmptyMessage();
         message.callType = Const.CALL_TYPE_CHANNEL_BUILD;
