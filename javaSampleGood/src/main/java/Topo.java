@@ -1,23 +1,43 @@
 import json.Message;
-import json.config.ChannelDetialConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 public class Topo {
     private HashMap<Integer,Integer> node2ChannelId;
     private List<Message> queue;
+    private List<Integer> nodeNeedToLinkButNot;
+    private int maxConnCount;
 
 
     public Topo(){
         node2ChannelId=new HashMap<>();
         queue = new ArrayList<>();
-
+        maxConnCount=Main.config.maxChannelConn;
+        nodeNeedToLinkButNot=new ArrayList<>();
     }
 
 
+    public void removeFirstNodeNeedToLinkButNot(){
+        nodeNeedToLinkButNot.remove(0);
+    }
+
+    public int getFirstNodeNeedToLinkButNot(){
+        return nodeNeedToLinkButNot.get(0);
+    }
+
+    public boolean nodeNeedToLinkButNotIsEmpty(){
+        return nodeNeedToLinkButNot.size()==0;
+    }
+
+    public boolean canLinkAnyMore(){
+        return node2ChannelId.size()<maxConnCount;
+    }
+
+    public void addToNodeNeedToLinkButNot(int nodeId){
+        nodeNeedToLinkButNot.add(nodeId);
+    }
 
     public void deleteChannelByNode(int nodeId){
         node2ChannelId.remove(nodeId);

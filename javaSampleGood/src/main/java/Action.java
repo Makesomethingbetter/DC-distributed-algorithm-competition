@@ -1,9 +1,5 @@
 import json.Message;
-import json.config.ChannelDetialConfig;
-
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class Action {
     private int target;
@@ -14,7 +10,6 @@ public class Action {
         this.target = target;
         this.topo=topo;
         this.scheduler = scheduler;
-//        waitSendAndDelete = Main.config.channelConfig.highSpeed.lag*3;
 
     }
 
@@ -23,7 +18,13 @@ public class Action {
     }
 
     public void onRequest(Message message) {
-        scheduler.sendChannelBuild(target, Const.STATE_ACCEPT, Const.ERR_CODE_NONE, message.channelType);
+        //如果我还可以连，我就连
+        if (topo.canLinkAnyMore()){
+            scheduler.sendChannelBuild(target, Const.STATE_ACCEPT, Const.ERR_CODE_NONE, message.channelType);
+        }else {
+            scheduler.sendChannelBuild(target,Const.STATE_REFUSE,Const.ERR_CODE_NONE,message.channelType);
+            topo.addToNodeNeedToLinkButNot(target);
+        }
     }
 
     public void onSucc(Message message) {
@@ -31,23 +32,20 @@ public class Action {
         filterQueueAndSendSomeMessage();
     }
 
-    public void onRefuse(Message message) {
+    public void onRefuse() {
+        System.out.println("我要建立连接被拒绝啦");
     }
 
 
 
-    public void onPrepare(Message message) {
+    public void onPrepare() {
+        if (topo.canLinkAnyMore()){
             doRequest(Const.CHANNEL_TYPE_FAST);
+        }else {
+            topo.addToNodeNeedToLinkButNot(target);
+        }
     }
 
-    /**
-     *
-     *
-     * 先把sleep设置为0或者贼小，看看能否发了就删
-     *
-     *
-     *
-     * */
     public void onSend(Message message) {
         if (scheduler.getId() == message.sysMessage.target) {
             scheduler.sendChannelDestory(message.channelId);

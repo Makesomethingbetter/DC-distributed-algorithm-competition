@@ -3,7 +3,6 @@ import conn.Channel;
 import conn.GeneralChannel;
 import json.Message;
 import json.config.Config;
-
 import java.io.File;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +34,7 @@ public class Main {
                 for (Message msg : message) {
                     scheduler.onRecv(msg);
                 }
+                Thread.sleep(20);
             } catch (InterruptedException e) {
                 break;
             } catch (Exception e) {
