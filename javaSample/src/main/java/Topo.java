@@ -111,7 +111,7 @@ public class Topo {
      * */
     public void initalTopoStructure(){
         enter=1;
-        tinyGroupSize=15;
+        tinyGroupSize=10;
         halfGroupNumber=(int)(   ((float)(nodeCount/2))   / tinyGroupSize );
         tinyGroupNumber=halfGroupNumber*2;
         farthestNumber=halfGroupNumber/2;

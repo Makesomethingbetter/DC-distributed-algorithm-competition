@@ -41,7 +41,7 @@ public class Action {
             scheduler.sendChannelBuild(target, Const.STATE_ACCEPT, Const.ERR_CODE_NONE, message.channelType);
         }else{
             scheduler.sendChannelBuild(target, Const.STATE_REFUSE,
-                        Const.ERR_CODE_CHANNEL_BUILD_TARGET_REFUSE, message.channelType);
+                        Const.ERR_CODE_CHANNEL_BUILD_TARGET_LIMIT, message.channelType);
         }
 //        int target = message.sysMessage.target;
 //        if (channelState != Const.CHANNEL_STATE_NONE) {
