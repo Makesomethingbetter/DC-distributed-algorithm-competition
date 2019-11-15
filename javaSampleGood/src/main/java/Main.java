@@ -18,7 +18,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
         //读JSON配置
         ObjectMapper objectMapper = new ObjectMapper();
-        config = objectMapper.readValue(new File("/home/config/client.json"), Config.class);
+        config = objectMapper.readValue(new File("client.json"), Config.class);
         //生成channel（这个是server的！） 配置
         Channel channel = new GeneralChannel();
         channel.initConfig(config);

@@ -63,6 +63,7 @@ public class GeneralChannel implements Channel {
         while (true) {
             String line = client.readLine();
             if (line.length() > 0) {
+                System.out.println("msg recved :" + line);
                 result.add(GeneralChannel.mapper.readValue(line, Message.class));
             } else {
                 break;

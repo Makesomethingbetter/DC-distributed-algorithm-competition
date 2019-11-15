@@ -5,10 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Topo {
+    //<channelId,nodeId>
     private HashMap<Integer,Integer> node2ChannelId;
     private List<Message> queue;
     private List<Integer> nodeNeedToLinkButNot;
     private int maxConnCount;
+    private int sendNum;
+    private int needSendNum;
 
 
     public Topo(){
@@ -16,8 +19,27 @@ public class Topo {
         queue = new ArrayList<>();
         maxConnCount=Main.config.maxChannelConn;
         nodeNeedToLinkButNot=new ArrayList<>();
+        sendNum=0;
+        needSendNum=0;
     }
 
+    public void sendNumAddOne(){
+        sendNum++;
+    }
+
+    public void needSendNumAddOne(){
+        needSendNum++;
+    }
+
+    public int getSendNum(){
+        return sendNum;
+    }
+
+    public int getNeedSendNum(){
+        return needSendNum;
+    }
+
+    //////////////
 
     public void removeFirstNodeNeedToLinkButNot(){
         nodeNeedToLinkButNot.remove(0);
@@ -32,6 +54,7 @@ public class Topo {
     }
 
     public boolean canLinkAnyMore(){
+        System.out.println("node2ChannelId.size(),maxConnCount："+node2ChannelId.size()+"!!"+maxConnCount);
         return node2ChannelId.size()<maxConnCount;
     }
 
@@ -39,31 +62,45 @@ public class Topo {
         nodeNeedToLinkButNot.add(nodeId);
     }
 
-    public void deleteChannelByNode(int nodeId){
-        node2ChannelId.remove(nodeId);
-    }
-
-    public void deleteChannel(int channelId){
+    public void deleteOneChannelByNode(int nodeId){
         for (HashMap.Entry<Integer,Integer> entry:node2ChannelId.entrySet()){
-            if (entry.getValue()==channelId){
-                deleteChannelByNode(entry.getKey());
+            if (entry.getValue()==nodeId){
+                deleteChannel(entry.getKey());
                 break;
             }
         }
     }
 
+    public void deleteChannel(int channelId){
+        node2ChannelId.remove(channelId);
+    }
 
 
-    public void addNodeAfterBuildSuc(int nodeId,int channelId){
-            node2ChannelId.put(nodeId,channelId);
+    public int getMaxConnCount() {
+        return maxConnCount;
+    }
+
+    public void addNodeAfterBuildSuc(int nodeId, int channelId){
+            node2ChannelId.put(channelId,nodeId);
     }
 
     public boolean isLinkedWith(int nodeId){
-        return node2ChannelId.containsKey(nodeId);
+        for (HashMap.Entry<Integer,Integer> entry:node2ChannelId.entrySet()){
+            if (entry.getValue()==nodeId){
+                return true;
+            }
+        }
+        return false;
     }
 
     public int getChannelId(int nodeId){
-        return node2ChannelId.get(nodeId);
+        for (HashMap.Entry<Integer,Integer> entry:node2ChannelId.entrySet()){
+            if (entry.getValue()==nodeId){
+                return entry.getKey();
+            }
+        }
+        System.out.println("getChannelId in topo error return 0~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        return 0;
     }
 
     public void addToQueue(Message message){
@@ -74,8 +111,13 @@ public class Topo {
         return queue;
     }
 
+
+
+    public int getChannelCount(){
+        return node2ChannelId.size();
+    }
+
     public void setQueue(List<Message> queue) {
         this.queue = queue;
     }
-
 }

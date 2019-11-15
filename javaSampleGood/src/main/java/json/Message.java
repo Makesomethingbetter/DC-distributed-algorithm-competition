@@ -25,4 +25,19 @@ public class Message implements Cloneable{
     public Message clone() throws CloneNotSupportedException {
         return (Message) super.clone();
     }
+
+    @Override
+    public boolean equals(Object anObject){
+        if (this == anObject) {
+            return true;
+        }
+        if (anObject instanceof Message) {
+            Message a=(Message) anObject;
+            if (a.sysMessage.data.equals(sysMessage.data)){
+                return true;
+            };
+        }
+
+        return false;
+    }
 }
