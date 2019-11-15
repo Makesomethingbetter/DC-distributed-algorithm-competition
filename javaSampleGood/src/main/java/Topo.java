@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Topo {
+    private int connCountToDoNum;
     //<channelId,nodeId>
     private HashMap<Integer,Integer> node2ChannelId;
     private List<Message> queue;
@@ -21,6 +22,16 @@ public class Topo {
         nodeNeedToLinkButNot=new ArrayList<>();
         sendNum=0;
         needSendNum=0;
+        connCountToDoNum=0;
+    }
+    //什么时候++：我要和别人建立 对应的--：我被拒绝了或者通道被摧毁了
+    //什么时候++；对面要和我连我同意了 对应的--：通道被摧毁了
+    public void connCountToDoNumAddOne(){
+        connCountToDoNum++;
+    }
+
+    public void connCountToDoNumSubOne(){
+        connCountToDoNum--;
     }
 
     public void sendNumAddOne(){
@@ -54,8 +65,8 @@ public class Topo {
     }
 
     public boolean canLinkAnyMore(){
-        System.out.println("node2ChannelId.size(),maxConnCount："+node2ChannelId.size()+"!!"+maxConnCount);
-        return node2ChannelId.size()<maxConnCount;
+        System.out.println("connCountToDoNum,maxConnCount："+connCountToDoNum+"!!"+maxConnCount);
+        return connCountToDoNum<maxConnCount;
     }
 
     public void addToNodeNeedToLinkButNot(int nodeId){

@@ -15,12 +15,14 @@ public class Action {
 
     public void doRequest(int channelType) {
         scheduler.sendChannelBuild(target, Const.STATE_REQUEST, Const.ERR_CODE_NONE, channelType);
+        topo.connCountToDoNumAddOne();
     }
 
     public void onRequest(Message message) {
         //如果我还可以连，我就连
         if (topo.canLinkAnyMore()){
             scheduler.sendChannelBuild(target, Const.STATE_ACCEPT, Const.ERR_CODE_NONE, message.channelType);
+            topo.connCountToDoNumAddOne();
         }else {
             System.out.println("我拒绝别人啦");
             scheduler.sendChannelBuild(target,Const.STATE_REFUSE,Const.ERR_CODE_NONE,message.channelType);

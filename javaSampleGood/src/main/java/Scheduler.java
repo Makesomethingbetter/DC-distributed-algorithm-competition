@@ -48,6 +48,10 @@ public class Scheduler {
             case Const.CALL_TYPE_SYS:
                 break;
             case Const.CALL_TYPE_CHANNEL_BUILD:
+                if (message.state==Const.STATE_REFUSE){
+                    topo.connCountToDoNumSubOne();
+                    System.out.println("在拒绝onrefuce!!!!!!");
+                }
                 if (message.channelId != 0) {
                     action[message.sysMessage.target].onSucc(message);
                 } else {
@@ -56,6 +60,7 @@ public class Scheduler {
                             action[message.sysMessage.target].onRequest(message);
                             break;
                         case Const.STATE_REFUSE:
+                            System.out.println("在拒绝onrefuce!!!!!!");
                             action[message.sysMessage.target].onRefuse();
                             break;
                     }
@@ -63,6 +68,7 @@ public class Scheduler {
                 break;
             case Const.CALL_TYPE_CHANNEL_DESTROY:
                     topo.deleteChannel(message.channelId);
+                    topo.connCountToDoNumSubOne();
                     //如果我还又需要建立的连接，我就建立，因为这时我的连接数小于我的maxChannelConn
                     //这时我可以连接通道，但是我不知道对方能不能连
                     //如果对方不能连，对方发送拒绝信息（其实也可以不发），且对方记录下来我们之间需要channel
