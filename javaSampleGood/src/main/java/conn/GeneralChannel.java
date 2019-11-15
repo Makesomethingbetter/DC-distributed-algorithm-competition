@@ -1,6 +1,5 @@
 package conn;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import json.config.Config;
 import json.Message;
@@ -45,7 +44,7 @@ public class GeneralChannel implements Channel {
     public void send(Message message, int targetId) throws Exception {
         message.targetId = targetId;
         String buf = GeneralChannel.mapper.writeValueAsString(message) + '\n';
-        System.out.println("msg send   :" + buf);
+       // System.out.println("msg send   :" + buf);
         client.println(buf);
     }
 
@@ -63,7 +62,7 @@ public class GeneralChannel implements Channel {
         while (true) {
             String line = client.readLine();
             if (line.length() > 0) {
-                System.out.println("msg recved :" + line);
+            //    System.out.println("msg recved :" + line);
                 result.add(GeneralChannel.mapper.readValue(line, Message.class));
             } else {
                 break;

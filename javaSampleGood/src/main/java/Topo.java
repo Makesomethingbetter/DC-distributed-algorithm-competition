@@ -1,5 +1,4 @@
 import json.Message;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,8 +10,6 @@ public class Topo {
     private List<Message> queue;
     private List<Integer> nodeNeedToLinkButNot;
     private int maxConnCount;
-    private int sendNum;
-    private int needSendNum;
 
 
     public Topo(){
@@ -20,8 +17,6 @@ public class Topo {
         queue = new ArrayList<>();
         maxConnCount=Main.config.maxChannelConn;
         nodeNeedToLinkButNot=new ArrayList<>();
-        sendNum=0;
-        needSendNum=0;
         connCountToDoNum=0;
     }
     //什么时候++：我要和别人建立 对应的--：我被拒绝了或者通道被摧毁了
@@ -33,24 +28,6 @@ public class Topo {
     public void connCountToDoNumSubOne(){
         connCountToDoNum--;
     }
-
-    public void sendNumAddOne(){
-        sendNum++;
-    }
-
-    public void needSendNumAddOne(){
-        needSendNum++;
-    }
-
-    public int getSendNum(){
-        return sendNum;
-    }
-
-    public int getNeedSendNum(){
-        return needSendNum;
-    }
-
-    //////////////
 
     public void removeFirstNodeNeedToLinkButNot(){
         nodeNeedToLinkButNot.remove(0);
@@ -65,7 +42,7 @@ public class Topo {
     }
 
     public boolean canLinkAnyMore(){
-        System.out.println("connCountToDoNum,maxConnCount："+connCountToDoNum+"!!"+maxConnCount);
+        System.out.println("occupiedChannelCount:maxConnCount：  "+connCountToDoNum+":"+maxConnCount);
         return connCountToDoNum<maxConnCount;
     }
 
@@ -73,22 +50,9 @@ public class Topo {
         nodeNeedToLinkButNot.add(nodeId);
     }
 
-    public void deleteOneChannelByNode(int nodeId){
-        for (HashMap.Entry<Integer,Integer> entry:node2ChannelId.entrySet()){
-            if (entry.getValue()==nodeId){
-                deleteChannel(entry.getKey());
-                break;
-            }
-        }
-    }
 
     public void deleteChannel(int channelId){
         node2ChannelId.remove(channelId);
-    }
-
-
-    public int getMaxConnCount() {
-        return maxConnCount;
     }
 
     public void addNodeAfterBuildSuc(int nodeId, int channelId){
@@ -110,7 +74,6 @@ public class Topo {
                 return entry.getKey();
             }
         }
-        System.out.println("getChannelId in topo error return 0~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return 0;
     }
 
@@ -120,12 +83,6 @@ public class Topo {
 
     public List<Message> getQueue() {
         return queue;
-    }
-
-
-
-    public int getChannelCount(){
-        return node2ChannelId.size();
     }
 
     public void setQueue(List<Message> queue) {

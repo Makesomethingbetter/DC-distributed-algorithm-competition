@@ -7,17 +7,6 @@ public class Scheduler {
     Action[] action;
     private Topo topo;
 
-    /**
-     * 一开始每个节点都知道有多少个点 能有多少条高速、普通通道、通道的时间、通道的message数
-     * 通过这些每个节点用相同的算法算出哪些做super node，得到相同的topo.java 并开始建立通道
-     * 初始化的拓扑结构是通过第一行的参数来影响的。
-     *
-     * 动态：1参数影响初始化的结构
-     * 2super node的messageCount可能不足，需要建立更多的super node之间的通道
-     *
-     * node1->server type:sys taget2
-     *
-     * */
 
     public Scheduler(Channel channel) {
         this.channel = channel;
@@ -34,9 +23,6 @@ public class Scheduler {
     }
 
     public void onRecv(Message message) {
-         if (message.errCode != Const.ERR_CODE_NONE) {
-             return ;
-         }
 
         switch (message.callType) {
             case Const.CALL_TYPE_PREPARE:
@@ -48,21 +34,13 @@ public class Scheduler {
             case Const.CALL_TYPE_SYS:
                 break;
             case Const.CALL_TYPE_CHANNEL_BUILD:
-                if (message.state==Const.STATE_REFUSE){
-                    topo.connCountToDoNumSubOne();
-                    System.out.println("在拒绝onrefuce!!!!!!");
-                }
                 if (message.channelId != 0) {
                     action[message.sysMessage.target].onSucc(message);
                 } else {
-                    switch (message.state) {
-                        case Const.STATE_NOTICE:
-                            action[message.sysMessage.target].onRequest(message);
-                            break;
-                        case Const.STATE_REFUSE:
-                            System.out.println("在拒绝onrefuce!!!!!!");
-                            action[message.sysMessage.target].onRefuse();
-                            break;
+                    if (message.state==2){
+                        action[message.sysMessage.target].onRefuse(message.errCode);
+                    }else if(message.state==Const.STATE_NOTICE){
+                        action[message.sysMessage.target].onRequest(message);
                     }
                 }
                 break;
@@ -75,6 +53,7 @@ public class Scheduler {
                     //在对方能连的时候再向我发建立连接
                     if (!topo.nodeNeedToLinkButNotIsEmpty()){
                         int targetId=topo.getFirstNodeNeedToLinkButNot();
+                        topo.connCountToDoNumAddOne();//新加的一行
                         sendChannelBuild(targetId, Const.STATE_REQUEST, Const.ERR_CODE_NONE, Const.CHANNEL_TYPE_FAST);
                         topo.removeFirstNodeNeedToLinkButNot();
                     }

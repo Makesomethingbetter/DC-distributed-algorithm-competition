@@ -4,22 +4,19 @@ import conn.GeneralChannel;
 import json.Message;
 import json.config.Config;
 import java.io.File;
-import java.util.Date;
 import java.util.List;
 
 public class Main {
 
     public static Config config;
 
-    public static double curTime() {
-        return new Date().getTime() / 1000.0;
-    }
+//    public static double curTime() {
+//        return new Date().getTime() / 1000.0;
+//    }
 
     public static void main(String[] args) throws Exception {
-        //读JSON配置
         ObjectMapper objectMapper = new ObjectMapper();
-        config = objectMapper.readValue(new File("client.json"), Config.class);
-        //生成channel（这个是server的！） 配置
+        config = objectMapper.readValue(new File("/home/config/client.json"), Config.class);
         Channel channel = new GeneralChannel();
         channel.initConfig(config);
         //
