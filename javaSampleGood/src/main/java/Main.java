@@ -16,7 +16,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
-        config = objectMapper.readValue(new File("/home/config/client.json"), Config.class);
+        config = objectMapper.readValue(new File("client.json"), Config.class);
         Channel channel = new GeneralChannel();
         channel.initConfig(config);
         //

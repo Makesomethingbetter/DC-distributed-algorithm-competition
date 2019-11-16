@@ -15,7 +15,6 @@ public class Action {
 
     public void doRequest(int channelType) {
         scheduler.sendChannelBuild(target, Const.STATE_REQUEST, Const.ERR_CODE_NONE, channelType);
-        topo.connCountToDoNumAddOne();
     }
 
     public void onRequest(Message message) {
@@ -36,15 +35,19 @@ public class Action {
     public void onRefuse(int errCode) {
         if (errCode==Const.ERR_CODE_CHANNEL_BUILD_TARGET_REFUSE){
             topo.connCountToDoNumSubOne();
+        }else if (errCode==Const.ERR_CODE_CHANNEL_BUILD_TOTAL_LIMIT){
+            System.out.println("shit");
+        }else {
+            System.out.println("fuck:errCode="+errCode);
         }
     }
 
 
 
     public void onPrepare() {
-
         if (topo.canLinkAnyMore()){
             doRequest(Const.CHANNEL_TYPE_FAST);
+            topo.connCountToDoNumAddOne();
         }else {
             topo.addToNodeNeedToLinkButNot(target);
         }

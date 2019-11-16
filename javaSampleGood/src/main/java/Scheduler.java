@@ -53,9 +53,10 @@ public class Scheduler {
                     //在对方能连的时候再向我发建立连接
                     if (!topo.nodeNeedToLinkButNotIsEmpty()){
                         int targetId=topo.getFirstNodeNeedToLinkButNot();
+                        topo.removeFirstNodeNeedToLinkButNot();
                         topo.connCountToDoNumAddOne();//新加的一行
                         sendChannelBuild(targetId, Const.STATE_REQUEST, Const.ERR_CODE_NONE, Const.CHANNEL_TYPE_FAST);
-                        topo.removeFirstNodeNeedToLinkButNot();
+
                     }
                 break;
         }
