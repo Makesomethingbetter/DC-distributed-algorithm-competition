@@ -4,30 +4,37 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Topo {
-    private int connCountToDoNum;
     //<channelId,nodeId>
     private HashMap<Integer,Integer> node2ChannelId;
     private List<Message> queue;
     private List<Integer> nodeNeedToLinkButNot;
     private int maxConnCount;
+    private List<Integer> targetLimitNodesList;
 
+    public List<Integer> getTargetLimitNodesList() {
+        return targetLimitNodesList;
+    }
 
     public Topo(){
         node2ChannelId=new HashMap<>();
         queue = new ArrayList<>();
         maxConnCount=Main.config.maxChannelConn;
         nodeNeedToLinkButNot=new ArrayList<>();
-        connCountToDoNum=0;
-    }
-    //什么时候++：我要和别人建立 对应的--：我被拒绝了或者通道被摧毁了
-    //什么时候++；对面要和我连我同意了 对应的--：通道被摧毁了
-    public void connCountToDoNumAddOne(){
-        connCountToDoNum++;
+        targetLimitNodesList=new ArrayList<>();
     }
 
-    public void connCountToDoNumSubOne(){
-        connCountToDoNum--;
+    public void addTotargetLimitNodesList(int nodeId){
+        targetLimitNodesList.add(nodeId);
     }
+
+    public void removeFromTargetLimitNodesList(int nodeId){
+        targetLimitNodesList.remove(new Integer(nodeId));
+    }
+
+    public int getTargetLimitNodesListSize(){
+        return targetLimitNodesList.size();
+    }
+
 
     public void removeFirstNodeNeedToLinkButNot(){
         nodeNeedToLinkButNot.remove(0);
@@ -42,8 +49,7 @@ public class Topo {
     }
 
     public boolean canLinkAnyMore(){
-        System.out.println("occupiedChannelCount:maxConnCount：  "+connCountToDoNum+":"+maxConnCount);
-        return connCountToDoNum<maxConnCount;
+        return node2ChannelId.size()<maxConnCount;
     }
 
     public void addToNodeNeedToLinkButNot(int nodeId){
